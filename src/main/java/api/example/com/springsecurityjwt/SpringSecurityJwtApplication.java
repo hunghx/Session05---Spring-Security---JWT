@@ -4,6 +4,7 @@ import api.example.com.springsecurityjwt.model.entity.Role;
 import api.example.com.springsecurityjwt.model.entity.RoleName;
 import api.example.com.springsecurityjwt.model.entity.User;
 import api.example.com.springsecurityjwt.repository.IUserRepository;
+import api.example.com.springsecurityjwt.service.MailService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -35,4 +36,10 @@ public class SpringSecurityJwtApplication {
 //           userRepository.save(roleAdmin);
 //        };
 //    }
+    @Bean
+    public  CommandLineRunner runner(MailService mailService){
+        return args -> {
+          mailService.sendMail("hung18061999hung@gmail.com","Mailracsc, kiem thu tinh nang gủi mail");
+        };
+    }
 }

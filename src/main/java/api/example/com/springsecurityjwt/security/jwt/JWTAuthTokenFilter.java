@@ -23,6 +23,7 @@ public class JWTAuthTokenFilter extends OncePerRequestFilter {
     private JWTProvider jwtProvider;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        // Point 1
         // xu lí token và giải mã -> cấp quyền / chứng nhân SecurityContext
         // lấy tokken
         String token = getTokenFromRequest(request);

@@ -16,19 +16,22 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableMethodSecurity(prePostEnabled = true,securedEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig {
     @Autowired
     private JWTAuthTokenFilter authTokenFilter;
     @Autowired
     private SecurityAuthenticationEntryPoint entryPoint;
+
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
     @Autowired
     private UserDetailsServiceCustom detailsServiceCustom;
 
@@ -39,27 +42,33 @@ public class SecurityConfig {
         provider.setUserDetailsService(detailsServiceCustom);
         return provider;
     }
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration auth) throws Exception {
         return auth.getAuthenticationManager();
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
+    public AccessDeniedHandler accessDeniedHandler() {
+        return new CustomDeniedHandler();
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth->
+                .authorizeHttpRequests(auth ->
 //                        auth.requestMatchers("/admin/**").hasRole("ADMIN"))
-                        auth.requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
-                                .requestMatchers("/user/**").hasAuthority("ROLE_USER")
-                                .requestMatchers("/manager/**").hasAuthority("ROLE_MANAGER")
-                                .requestMatchers("/user-manager/**","/user-client/**").hasAnyAuthority("ROLE_USER","ROLE_MANAGER")
-                                .anyRequest().permitAll() // tất cả quyền
+                                auth.requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+                                        .requestMatchers("/user/**").hasAuthority("ROLE_USER")
+                                        .requestMatchers("/manager/**").hasAuthority("ROLE_MANAGER")
+                                        .requestMatchers("/user-manager/**", "/user-client/**").hasAnyAuthority("ROLE_USER", "ROLE_MANAGER")
+                                        .anyRequest().permitAll() // tất cả quyền
                 )
                 .authenticationProvider(authenticationProvider())
-                .exceptionHandling(e -> e.authenticationEntryPoint(entryPoint))
+                .exceptionHandling(e -> e.authenticationEntryPoint(entryPoint).accessDeniedHandler(accessDeniedHandler()))
                 .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
-            return http.build();
+        return http.build();
     }
 
 
